@@ -56,7 +56,6 @@ function App() {
   };
 
   const handleBatchUpdate = (updatedRules: SignatureRule[]) => {
-    // ... existing ...
     if (!fileData) return;
     const updatesMap = new Map(updatedRules.map(r => [r.id, r]));
 
@@ -65,6 +64,19 @@ function App() {
       return {
         ...prev,
         rules: prev.rules.map(r => updatesMap.get(r.id) || r)
+      };
+    });
+  };
+
+  const handleBatchDelete = (idsToDelete: string[]) => {
+    if (!fileData) return;
+    const idsSet = new Set(idsToDelete);
+
+    setFileData(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        rules: prev.rules.filter(r => !idsSet.has(r.id))
       };
     });
   };
@@ -186,6 +198,7 @@ function App() {
                 rules={filteredRules}
                 onRuleUpdate={handleRuleUpdate}
                 onBatchUpdate={handleBatchUpdate}
+                onBatchDelete={handleBatchDelete}
               />
             </div>
           </div>

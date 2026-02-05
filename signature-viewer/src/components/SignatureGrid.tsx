@@ -6,7 +6,6 @@ import Switch from './Switch';
 import BatchToolbar from './BatchToolbar';
 import Pagination from './Pagination';
 
-// ... ActionToggle (unchanged) ...
 const ActionToggle = ({ active, variant, onClick }: { active: boolean, variant: 'block' | 'log' | 'stats', onClick: () => void }) => {
     const activeClass = variant === 'block' ? 'action-btn-block' : variant === 'log' ? 'action-btn-log' : 'action-btn-stats';
     return (
@@ -23,9 +22,10 @@ interface SignatureGridProps {
     rules: SignatureRule[];
     onRuleUpdate: (updatedRule: SignatureRule) => void;
     onBatchUpdate: (updatedRules: SignatureRule[]) => void;
+    onBatchDelete: (idsToDelete: string[]) => void;
 }
 
-const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBatchUpdate }) => {
+const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBatchUpdate, onBatchDelete }) => {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(50);
@@ -33,7 +33,7 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
     // Reset page when filters change (detected by rules array length change or reset)
     useEffect(() => {
         setCurrentPage(1);
-    }, [rules]); // Alternatively use rules.length if reference is unstable, but App.tsx creates new array.
+    }, [rules]);
 
     // Calculate Pagination
     const totalItems = rules.length;
@@ -64,7 +64,6 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
         setSelectedIds(newSet);
     };
 
-    // ... toggle handlers (unchanged) ...
     const handleToggleAction = (rule: SignatureRule, actionType: 'block' | 'log' | 'stats') => {
         let currentActions = rule.actions.split(',').map(s => s.trim()).filter(s => s !== '');
         const exists = currentActions.includes(actionType);
@@ -87,7 +86,6 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
         onRuleUpdate({ ...rule, enabled: newState });
     };
 
-    // ... batch operations (unchanged logic works because it iterates ALL filtered rules and checks selectedIds) ...
     const applyBatchAction = (transform: (rule: SignatureRule) => SignatureRule) => {
         const updates: SignatureRule[] = [];
         // Iterate over ALL filtered rules to support multi-page selection
@@ -111,6 +109,14 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
         return { ...r, actions: currentActions.join(',') };
     });
 
+    const batchDelete = () => {
+        if (selectedIds.size === 0) return;
+        if (window.confirm(`Are you sure you want to delete ${selectedIds.size} selected rules?`)) {
+            onBatchDelete(Array.from(selectedIds));
+            setSelectedIds(new Set());
+        }
+    };
+
     return (
         <div className="relative flex flex-col gap-4">
             <BatchToolbar
@@ -123,6 +129,7 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
                 onRemoveLogAll={() => batchUpdateAction('log', false)}
                 onStatsAll={() => batchUpdateAction('stats', true)}
                 onRemoveStatsAll={() => batchUpdateAction('stats', false)}
+                onDeleteAll={batchDelete}
                 onClearSelection={() => setSelectedIds(new Set())}
             />
 
@@ -152,7 +159,6 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
                                         title="Select All on this Page"
                                     />
                                 </th>
-                                {/* ... headers unchanged ... */}
                                 <th className="p-6 font-semibold w-32">Enable</th>
                                 <th className="p-6 font-semibold w-28">Block</th>
                                 <th className="p-6 font-semibold w-28">Log</th>

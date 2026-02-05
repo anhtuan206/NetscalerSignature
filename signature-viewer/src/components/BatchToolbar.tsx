@@ -10,6 +10,7 @@ interface BatchToolbarProps {
     onRemoveLogAll: () => void;
     onStatsAll: () => void;
     onRemoveStatsAll: () => void;
+    onDeleteAll: () => void;
     onClearSelection: () => void;
 }
 
@@ -23,6 +24,7 @@ const BatchToolbar: React.FC<BatchToolbarProps> = ({
     onRemoveLogAll,
     onStatsAll,
     onRemoveStatsAll,
+    onDeleteAll,
     onClearSelection
 }) => {
     if (selectedCount === 0) return null;
@@ -69,6 +71,18 @@ const BatchToolbar: React.FC<BatchToolbarProps> = ({
                             <button onClick={onRemoveStatsAll} className="btn-batch btn-batch-secondary" title="Disable Stats">Disable</button>
                         </div>
                     </div>
+                </div>
+
+                {/* Actions Group */}
+                <div className="flex flex-col gap-1 items-center border-l border-border/50 pl-4 ml-2">
+                    <span className="text-[10px] uppercase text-text-muted text-center font-bold">ACTIONS</span>
+                    <button
+                        onClick={onDeleteAll}
+                        className="btn-batch bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border-red-500/20"
+                        title="Delete Selected Rules"
+                    >
+                        Delete
+                    </button>
                 </div>
             </div>
         </div>
