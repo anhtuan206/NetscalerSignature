@@ -117,9 +117,9 @@ function App() {
           </div>
           <div>
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-              NetScaler Signature Viewer
+              Citrix Signature Editor
             </h1>
-            <p className="text-text-muted">Manage and Audit XML Signature Rules</p>
+            <p className="text-text-muted">View and Edit XML Signature Rules</p>
           </div>
         </div>
         <div>
