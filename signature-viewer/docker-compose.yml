@@ -3,21 +3,48 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8080:80"
-    restart: always
+
+    restart: unless-stopped
+    networks:
+      - public-mendix-app
     depends_on:
       - backend
+    labels:
+      # Autoheal
+      autoheal: true
+      # Enable Traefik
+      traefik.enable: true
+      # HTTPS Router
+      traefik.http.routers.sigedit.rule: Host(`sigedit.cpc.vn`)
+      traefik.http.routers.sigedit.entrypoints: websecure
+      traefik.http.routers.sigedit.tls: true
+      traefik.http.routers.sigedit.tls.certresolver: myresolver
+      traefik.http.routers.sigedit.priority: 10
+      traefik.http.services.sigedit.loadbalancer.server.port: "80"
+      # HTTP Router → redirect to HTTPS
+      traefik.http.routers.sigedit-http.rule: Host(`sigedit.cpc.vn`)
+      traefik.http.routers.sigedit-http.entrypoints: web
+      traefik.http.routers.sigedit-http.middlewares: redirect-to-https
+      traefik.http.routers.sigedit-http.priority: 1
+
+      # Middleware for redirect
+      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: https
 
   backend:
     build:
       context: .
       dockerfile: Dockerfile.server
-    ports:
-      - "3001:3001"
-    restart: always
+
+    restart: unless-stopped
+    networks:
+      - public-mendix-app
     volumes:
-      - uploads_data:/app/uploads
+      - vol_sigedit:/app/uploads
 
 volumes:
-  uploads_data:
+  vol_sigedit:
+
+
+networks:
+  public-mendix-app:
+    external: true
