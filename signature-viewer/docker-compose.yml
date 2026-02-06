@@ -15,17 +15,17 @@ services:
       # Enable Traefik
       traefik.enable: true
       # HTTPS Router
-      traefik.http.routers.sigedit.rule: Host(`sigedit.cpc.vn`)
-      traefik.http.routers.sigedit.entrypoints: websecure
-      traefik.http.routers.sigedit.tls: true
-      traefik.http.routers.sigedit.tls.certresolver: myresolver
-      traefik.http.routers.sigedit.priority: 10
-      traefik.http.services.sigedit.loadbalancer.server.port: "80"
+      traefik.http.routers.sigeditor.rule: Host(`sigeditor.cpc.vn`)
+      traefik.http.routers.sigeditor.entrypoints: websecure
+      traefik.http.routers.sigeditor.tls: true
+      traefik.http.routers.sigeditor.tls.certresolver: myresolver
+      traefik.http.routers.sigeditor.priority: 10
+      traefik.http.services.sigeditor.loadbalancer.server.port: "80"
       # HTTP Router → redirect to HTTPS
-      traefik.http.routers.sigedit-http.rule: Host(`sigedit.cpc.vn`)
-      traefik.http.routers.sigedit-http.entrypoints: web
-      traefik.http.routers.sigedit-http.middlewares: redirect-to-https
-      traefik.http.routers.sigedit-http.priority: 1
+      traefik.http.routers.sigeditor-http.rule: Host(`sigeditor.cpc.vn`)
+      traefik.http.routers.sigeditor-http.entrypoints: web
+      traefik.http.routers.sigeditor-http.middlewares: redirect-to-https
+      traefik.http.routers.sigeditor-http.priority: 1
 
       # Middleware for redirect
       traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: https
@@ -39,10 +39,10 @@ services:
     networks:
       - public-mendix-app
     volumes:
-      - vol_sigedit:/app/uploads
+      - vol_sigeditor:/app/uploads
 
 volumes:
-  vol_sigedit:
+  vol_sigeditor:
 
 
 networks:
