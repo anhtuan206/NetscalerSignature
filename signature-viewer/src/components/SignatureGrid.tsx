@@ -41,6 +41,31 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedRules = rules.slice(startIndex, startIndex + itemsPerPage);
 
+    // Sync selectedIds with currently visible paginatedRules
+    // This ensures that when page changes, filters change, or data updates (removing item from view),
+    // the selection is updated to only include what is currently visible.
+    useEffect(() => {
+        const visibleIds = new Set(paginatedRules.map(r => r.id));
+        setSelectedIds(prev => {
+            const next = new Set<string>();
+            prev.forEach(id => {
+                if (visibleIds.has(id)) {
+                    next.add(id);
+                }
+            });
+
+            // Only update if size changes to avoid unnecessary re-renders loop if reference changes but content is same
+            // (Though strict equality check of Sets is hard, checking size + content diff is good)
+            if (prev.size !== next.size) return next;
+
+            // Deep check needed if sizes match but content differs? 
+            // In our logic ("intersection"), 'next' is always a subset of 'prev'. 
+            // If sizes are equal, then next === prev (content-wise).
+            // So size check is sufficient here because strictly shrinking.
+            return next;
+        });
+    }, [paginatedRules]);
+
     // Select All (Current Page Only)
     const isAllPageSelected = paginatedRules.length > 0 && paginatedRules.every(r => selectedIds.has(r.id));
 
@@ -86,16 +111,20 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
         onRuleUpdate({ ...rule, enabled: newState });
     };
 
+    // Calculate currently visible/active selected rules (intersection of selection and current page view)
+    // We use paginatedRules instead of rules to ensure the count reflects "What You See" (Page Scope)
+    // rather than "What is Filtered" (Global Scope).
+    const activeSelectedRules = paginatedRules.filter(r => selectedIds.has(r.id));
+    const activeSelectedCount = activeSelectedRules.length;
+
     const applyBatchAction = (transform: (rule: SignatureRule) => SignatureRule) => {
         const updates: SignatureRule[] = [];
-        // Iterate over ALL filtered rules to support multi-page selection
-        rules.forEach(rule => {
-            if (selectedIds.has(rule.id)) {
-                const updated = transform({ ...rule });
-                if (updated.enabled !== rule.enabled) updateSignatureAttribute(updated, 'enabled', updated.enabled);
-                if (updated.actions !== rule.actions) updateSignatureAttribute(updated, 'actions', updated.actions);
-                updates.push(updated);
-            }
+        // Iterate over only ACTIVE (Page Scoped) selected rules
+        activeSelectedRules.forEach(rule => {
+            const updated = transform({ ...rule });
+            if (updated.enabled !== rule.enabled) updateSignatureAttribute(updated, 'enabled', updated.enabled);
+            if (updated.actions !== rule.actions) updateSignatureAttribute(updated, 'actions', updated.actions);
+            updates.push(updated);
         });
         onBatchUpdate(updates);
     };
@@ -110,17 +139,23 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
     });
 
     const batchDelete = () => {
-        if (selectedIds.size === 0) return;
-        if (window.confirm(`Are you sure you want to delete ${selectedIds.size} selected rules?`)) {
-            onBatchDelete(Array.from(selectedIds));
-            setSelectedIds(new Set());
+        if (activeSelectedCount === 0) return;
+        if (window.confirm(`Are you sure you want to delete ${activeSelectedCount} selected rules?`)) {
+            // Only delete the visible/filtered selected items
+            onBatchDelete(activeSelectedRules.map(r => r.id));
+
+            // We should also remove them from the selection state to be clean, 
+            // though the parent will remove them from the data anyway.
+            const newSelected = new Set(selectedIds);
+            activeSelectedRules.forEach(r => newSelected.delete(r.id));
+            setSelectedIds(newSelected);
         }
     };
 
     return (
         <div className="relative flex flex-col gap-4">
             <BatchToolbar
-                selectedCount={selectedIds.size}
+                selectedCount={activeSelectedCount}
                 onEnableAll={() => batchSetEnabled('ON')}
                 onDisableAll={() => batchSetEnabled('OFF')}
                 onBlockAll={() => batchUpdateAction('block', true)}
