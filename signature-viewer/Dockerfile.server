@@ -1,0 +1,16 @@
+# Server Build Stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci
+
+COPY server.js .
+# Create uploads directory in the image to ensure permissions are correct if volume mount fails or is minimal
+RUN mkdir -p uploads
+
+EXPOSE 3001
+
+CMD ["node", "server.js"]
