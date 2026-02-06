@@ -67,15 +67,15 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to publish');
+        throw new Error(`Failed to publish: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
       setPublishedUrl(data.downloadUrl);
       setPublishExpiresIn(data.expiresIn);
       setPublishModalOpen(true);
-    } catch (error) {
-      alert('Failed to publish file.');
+    } catch (error: any) {
+      alert(error.message || 'Failed to publish file.');
     } finally {
       setIsPublishing(false);
     }
@@ -109,6 +109,13 @@ function App() {
   const handleBatchDelete = (idsToDelete: string[]) => {
     if (!fileData) return;
     const idsSet = new Set(idsToDelete);
+
+    // Remove DOM elements for deleted rules to ensure they are gone from export
+    fileData.rules.forEach(rule => {
+      if (idsSet.has(rule.id) && rule._domElement && rule._domElement.parentNode) {
+        rule._domElement.parentNode.removeChild(rule._domElement);
+      }
+    });
 
     setFileData(prev => {
       if (!prev) return null;

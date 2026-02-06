@@ -24,9 +24,17 @@ const Pagination: React.FC<PaginationProps> = ({
         <div className={`flex items-center justify-between px-2 py-4 ${className}`}>
             <div className="flex items-center gap-4 text-sm text-text-muted">
                 <span>
-                    Showing <span className="font-medium text-text">{Math.min(totalItems, (currentPage - 1) * itemsPerPage + 1)}</span> to{' '}
-                    <span className="font-medium text-text">{Math.min(totalItems, currentPage * itemsPerPage)}</span> of{' '}
-                    <span className="font-medium text-text">{totalItems}</span> results
+                    {itemsPerPage === -1 ? (
+                        <>
+                            Showing all <span className="font-medium text-text">{totalItems}</span> results
+                        </>
+                    ) : (
+                        <>
+                            Showing <span className="font-medium text-text">{Math.min(totalItems, (currentPage - 1) * itemsPerPage + 1)}</span> to{' '}
+                            <span className="font-medium text-text">{Math.min(totalItems, currentPage * itemsPerPage)}</span> of{' '}
+                            <span className="font-medium text-text">{totalItems}</span> results
+                        </>
+                    )}
                 </span>
 
                 <select
@@ -38,6 +46,7 @@ const Pagination: React.FC<PaginationProps> = ({
                     <option value={20}>20 per page</option>
                     <option value={50}>50 per page</option>
                     <option value={100}>100 per page</option>
+                    <option value={-1}>All</option>
                 </select>
             </div>
 
@@ -56,7 +65,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
                 <button
                     onClick={() => onPageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === totalPages || itemsPerPage === -1}
                     className="p-2 rounded hover:bg-surface border border-transparent hover:border-border disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                     <ChevronRight size={16} />

@@ -37,9 +37,10 @@ const SignatureGrid: React.FC<SignatureGridProps> = ({ rules, onRuleUpdate, onBa
 
     // Calculate Pagination
     const totalItems = rules.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedRules = rules.slice(startIndex, startIndex + itemsPerPage);
+    // If itemsPerPage is -1, we show all items, so effectively 1 page
+    const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * (itemsPerPage === -1 ? totalItems : itemsPerPage);
+    const paginatedRules = itemsPerPage === -1 ? rules : rules.slice(startIndex, startIndex + itemsPerPage);
 
     // Sync selectedIds with currently visible paginatedRules
     // This ensures that when page changes, filters change, or data updates (removing item from view),
