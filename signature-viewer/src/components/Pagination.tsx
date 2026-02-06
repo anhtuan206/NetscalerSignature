@@ -32,7 +32,7 @@ const Pagination: React.FC<PaginationProps> = ({
                 <select
                     value={itemsPerPage}
                     onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-                    className="bg-surface border border-border rounded px-2 py-1 text-xs focus:outline-none focus:border-primary"
+                    className="bg-surface border border-border rounded px-2 py-1 text-xs text-text focus:outline-none focus:border-primary"
                 >
                     <option value={10}>10 per page</option>
                     <option value={20}>20 per page</option>

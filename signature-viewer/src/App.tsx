@@ -6,6 +6,7 @@ import FileUpload from './components/FileUpload';
 import SignatureGrid from './components/SignatureGrid';
 import FilterPanel from './components/FilterPanel';
 import ExportButton from './components/ExportButton';
+import PublishButton, { PublishModal } from './components/PublishButton';
 import { ShieldCheck, Search } from 'lucide-react';
 
 function App() {
@@ -17,6 +18,12 @@ function App() {
   const [filterLog, setFilterLog] = useState('');
   const [filterStats, setFilterStats] = useState('');
   const [searchText, setSearchText] = useState('');
+
+  // Publish State
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState('');
+  const [publishExpiresIn, setPublishExpiresIn] = useState('');
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const handleFileUpload = (content: string) => {
     // ... existing ...
@@ -41,6 +48,37 @@ function App() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handlePublish = async () => {
+    if (!fileData) {
+      return;
+    }
+    setIsPublishing(true);
+    try {
+      const xmlString = generateXML(fileData);
+
+      const response = await fetch('/api/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: xmlString }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to publish');
+      }
+
+      const data = await response.json();
+      setPublishedUrl(data.downloadUrl);
+      setPublishExpiresIn(data.expiresIn);
+      setPublishModalOpen(true);
+    } catch (error) {
+      alert('Failed to publish file.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleRuleUpdate = (updatedRule: SignatureRule) => {
@@ -141,6 +179,7 @@ function App() {
                 <div className="text-sm font-semibold text-text">{fileData.rules.length} Rules</div>
                 <div className="text-xs text-text-muted">v{fileData.version} (Schema {fileData.schema_version})</div>
               </div>
+              <PublishButton onPublish={handlePublish} disabled={isPublishing} />
               <ExportButton onExport={handleExport} />
             </div>
           )}
@@ -204,6 +243,13 @@ function App() {
           </div>
         )}
       </main>
+
+      <PublishModal
+        isOpen={publishModalOpen}
+        onClose={() => setPublishModalOpen(false)}
+        url={publishedUrl}
+        expiresIn={publishExpiresIn}
+      />
     </div>
   );
 }
